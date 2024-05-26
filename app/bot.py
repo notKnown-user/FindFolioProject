@@ -90,8 +90,12 @@ def get_surname(update: Update, context: CallbackContext) -> int:
             "Facebook": facebook_data
         }
 
+        # Escape markdown in combined data
+        combined_data_str = str(combined_data)
+        combined_data_str = escape_markdown_v2(combined_data_str)
+
         # Display combined data to user
-        update.message.reply_text(f'Fetched data: {combined_data}')
+        update.message.reply_text(f'Fetched data: {combined_data_str}', parse_mode='MarkdownV2')
         logger.info(f"Combined data sent to user: {combined_data}")
     except Exception as e:
         logger.error(f"Error occurred: {e}")
