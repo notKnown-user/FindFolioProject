@@ -1,4 +1,15 @@
 python-telegram-bot==13.7
-requests==2.25.1
-beautifulsoup4==4.9.3
-SQLAlchemy
+selenium==3.141.0
+instaloader==4.8.1
+facebook-scraper>=0.2.46  # Updated version to avoid demjson dependency
+APScheduler==3.6.3
+certifi
+pytz>=2018.6
+tornado>=6.1
+cachetools==4.2.2
+urllib3
+requests>=2.4
+dateparser<2.0.0,>=1.0.0
+requests-html<0.11.0,>=0.10.0
+lxml
+lxml_html_clean

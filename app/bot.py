@@ -4,6 +4,10 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler, CallbackQueryHandler, PicklePersistence
 
+from scrappers.linkedin import linkedin_scraper
+from scrappers.instagram import instagram_scraper
+from scrappers.facebook import facebook_scraper
+
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -19,7 +23,6 @@ def escape_markdown_v2(text):
     escape_chars = r'\_*[]()~`>#+-=|{}.!'
     return re.sub(f'([{re.escape(escape_chars)}])', r'\\\1', text)
 
-# Define command handlers
 def start(update: Update, context: CallbackContext) -> None:
     keyboard = [[InlineKeyboardButton("Search Person", callback_data='search_person')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -29,11 +32,12 @@ def start(update: Update, context: CallbackContext) -> None:
         'You can use the button below to search for a person.',
         reply_markup=reply_markup
     )
+    logger.info("Start command received, displaying options to user.")
 
 def search_person(update: Update, context: CallbackContext) -> int:
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text="Please enter the name of the person:")
+    query.message.reply_text("Please enter the name of the person:")
     return NAME
 
 def get_name(update: Update, context: CallbackContext) -> int:
@@ -43,6 +47,7 @@ def get_name(update: Update, context: CallbackContext) -> int:
         return NAME
     context.user_data['name'] = name
     update.message.reply_text('Please enter the surname of the person:')
+    logger.info(f"Name received: {name}")
     return SURNAME
 
 def get_surname(update: Update, context: CallbackContext) -> int:
@@ -55,6 +60,8 @@ def get_surname(update: Update, context: CallbackContext) -> int:
     name = escape_markdown_v2(context.user_data['name'])
     surname = escape_markdown_v2(context.user_data['surname'])
 
+    logger.info(f"Surname received: {surname}")
+
     # Improved message format with proper markdown
     update.message.reply_text(
         f"🔍 Searching for LinkedIn user with the following details:\n"
@@ -64,14 +71,37 @@ def get_surname(update: Update, context: CallbackContext) -> int:
         parse_mode='MarkdownV2'
     )
     
-    # Placeholder for calling the LinkedIn scraper
-    # linkedin_data = linkedin_scraper(name, surname)
-    # update.message.reply_text(f'LinkedIn data: {linkedin_data}')
+    # Fetch data from LinkedIn
+    try:
+        linkedin_data = linkedin_scraper(context.user_data['name'], context.user_data['surname'])
+        logger.info(f"LinkedIn data fetched: {linkedin_data}")
+
+        # Fetch Instagram and Facebook data based on LinkedIn profile information
+        instagram_data = instagram_scraper(linkedin_data.get('profile', ''))
+        logger.info(f"Instagram data fetched: {instagram_data}")
+
+        facebook_data = facebook_scraper(linkedin_data.get('profile', ''))
+        logger.info(f"Facebook data fetched: {facebook_data}")
+
+        # Combine all data
+        combined_data = {
+            "LinkedIn": linkedin_data,
+            "Instagram": instagram_data,
+            "Facebook": facebook_data
+        }
+
+        # Display combined data to user
+        update.message.reply_text(f'Fetched data: {combined_data}')
+        logger.info(f"Combined data sent to user: {combined_data}")
+    except Exception as e:
+        logger.error(f"Error occurred: {e}")
+        update.message.reply_text('An error occurred while fetching data. Please try again later.')
     
     return ConversationHandler.END
 
 def cancel(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Operation cancelled.')
+    logger.info("Operation cancelled by user.")
     return ConversationHandler.END
 
 def error(update: Update, context: CallbackContext) -> None:
