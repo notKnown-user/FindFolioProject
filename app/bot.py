@@ -37,7 +37,8 @@ def start(update: Update, context: CallbackContext) -> None:
 def search_person(update: Update, context: CallbackContext) -> int:
     query = update.callback_query
     query.answer()
-    query.message.reply_text("Please enter the name of the person:")
+    context.bot.send_message(chat_id=query.message.chat_id, text="Please enter the name of the person:")
+    logger.info("Search person button clicked, prompting user for name.")
     return NAME
 
 def get_name(update: Update, context: CallbackContext) -> int:
