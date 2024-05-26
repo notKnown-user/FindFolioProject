@@ -50,7 +50,9 @@ def search_person(update: Update, context: CallbackContext) -> int:
     logger.debug("Handling search_person callback.")
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text="Please enter the name of the person:")
+    context.bot.send_message(
+        chat_id=query.message.chat_id, text="Please enter the name of the person:"
+    )
     logger.info("Search person button clicked, prompting user for name.")
     return NAME
 
