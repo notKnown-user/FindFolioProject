@@ -1,13 +1,10 @@
-FROM python:3.9
+# Use an official Python runtime as a parent image
+FROM python:3.10-alpine
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+COPY . .
 
-RUN /usr/local/bin/python -m pip install --upgrade pip
-RUN pip install -r requirements.txt
-COPY src/ .
-
-EXPOSE 8000 5432 6379
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["python3", "app/bot.py"]
