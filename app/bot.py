@@ -46,7 +46,7 @@ def start(update: Update, context: CallbackContext) -> None:
     logger.info("Start command received, displaying options to user.")
 
 
-def search_person(update: Update, context: CallbackContext) -> int:
+def search_person(update: Update, context: CallbackContext) -> None:
     logger.debug("Handling search_person callback.")
     query = update.callback_query
     query.answer()
@@ -162,8 +162,9 @@ def main():
 
     dp = updater.dispatcher
 
+    # Define conversation handler with states NAME and SURNAME
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[CommandHandler('start', start)],
         states={
             NAME: [MessageHandler(Filters.text & ~Filters.command, get_name)],
             SURNAME: [MessageHandler(Filters.text & ~Filters.command, get_surname)],
