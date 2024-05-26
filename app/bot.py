@@ -12,6 +12,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     PicklePersistence,
 )
+
 from scrappers.linkedin import linkedin_scraper
 from scrappers.instagram import instagram_scraper
 from scrappers.facebook import facebook_scraper
@@ -49,7 +50,9 @@ def search_person(update: Update, context: CallbackContext) -> int:
     logger.debug("Handling search_person callback.")
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text="Please enter the name of the person:")
+    context.bot.send_message(
+        chat_id=query.message.chat_id, text="Please enter the name of the person:"
+    )
     logger.info("Search person button clicked, prompting user for name.")
     return NAME
 
@@ -160,7 +163,7 @@ def main():
     dp = updater.dispatcher
 
     conv_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(search_person, pattern='^search_person$')],
+        entry_points=[CommandHandler("start", start)],
         states={
             NAME: [MessageHandler(Filters.text & ~Filters.command, get_name)],
             SURNAME: [MessageHandler(Filters.text & ~Filters.command, get_surname)],
@@ -170,8 +173,8 @@ def main():
         persistent=True,
     )
 
-    dp.add_handler(CommandHandler("start", start))
     dp.add_handler(conv_handler)
+    dp.add_handler(CallbackQueryHandler(search_person, pattern='^search_person$'))
     dp.add_error_handler(error)
 
     updater.start_polling()
